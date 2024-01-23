@@ -24,7 +24,7 @@ class HttpConnectionListener:
     if mask & selectors.EVENT_READ:
       recv_data = sock.recv(1024)
       if recv_data:
-        data.outb += recv_data
+        data.outb += b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n" 
       else:
         print(f"Closing connection to {data.addr}")
         self.sel.unregister(sock)
