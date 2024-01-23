@@ -1,6 +1,4 @@
 import socket
-import threading
-import logging
 import selectors
 import types
 
@@ -9,6 +7,7 @@ class HttpConnectionListener:
     self.HOST = "127.0.01"
     self.PORT = 65432
     self.sel = selectors.DefaultSelector()
+    self.running = False 
 
   def accept_wrapper(self, sock):
     conn, addr = sock.accept()
@@ -35,7 +34,7 @@ class HttpConnectionListener:
         sent = sock.send(data.outb)
         data.outb = data.outb[sent:]
 
-  def listen(self):  
+  def listen(self): 
     lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     lsock.bind((self.HOST, self.PORT))
     lsock.listen() 
@@ -44,8 +43,10 @@ class HttpConnectionListener:
     lsock.setblocking(False)
     self.sel.register(lsock, selectors.EVENT_READ, data=None)
 
+  def run_event_loop(self):
+    self.running = True
     try:
-      while True:
+      while self.running:
         events = self.sel.select(timeout=None)
         for key, mask in events:
           if key.data is None:
@@ -57,6 +58,8 @@ class HttpConnectionListener:
     finally:
       self.sel.close()
 
+  def stop(self):
+    self.running = False
+
 if __name__ == "__main__":
-  print("Got here")
   HttpConnectionListener().listen()

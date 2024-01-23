@@ -1,4 +1,5 @@
 import socket
+from threading import Thread
 from server import HttpConnectionListener 
 
 class HttpConnection():
@@ -13,4 +14,17 @@ class HttpConnection():
       data = s.recv(1024)
       print(f"Recieved back {data}")
 
-HttpConnection().send()
+
+def create_server(server):
+  server.run_event_loop()
+
+if __name__ == "__main__":
+  server = HttpConnectionListener()
+  server.listen()
+  thread = Thread(target = create_server, args = (server,)) 
+  thread.start()
+
+  HttpConnection().send()
+
+  server.stop()
+  thread.join()
