@@ -3,15 +3,14 @@ import selectors
 import types
 
 class HttpConnectionListener:
-  def __init__(self):
-    self.HOST = "127.0.01"
-    self.PORT = 65432
+  def __init__(self, host, port):
+    self.host = host 
+    self.port = port
     self.sel = selectors.DefaultSelector()
     self.running = False 
 
   def accept_wrapper(self, sock):
     conn, addr = sock.accept()
-    print(f"Accepted connection from {addr}")
     conn.setblocking(False)
     data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -30,16 +29,13 @@ class HttpConnectionListener:
         sock.close()
     if mask & selectors.EVENT_WRITE:
       if data.outb:
-        print(f"Echoing {data.outb!r} to {data.addr}")
         sent = sock.send(data.outb)
         data.outb = data.outb[sent:]
 
   def listen(self): 
     lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    lsock.bind((self.HOST, self.PORT))
+    lsock.bind((self.host, self.port))
     lsock.listen() 
-    
-    print(f"Listening on {(self.HOST, self.PORT)}")
     lsock.setblocking(False)
     self.sel.register(lsock, selectors.EVENT_READ, data=None)
 
@@ -60,6 +56,3 @@ class HttpConnectionListener:
 
   def stop(self):
     self.running = False
-
-if __name__ == "__main__":
-  HttpConnectionListener().listen()
